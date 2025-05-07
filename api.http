@@ -1,0 +1,11 @@
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+    "name":"marcelo INDICADO 3",
+    "email":"teste2indicado3@marcelo.com",
+    "referrer": "8728d3bd-4999-41cc-8681-6b3b6b9752e8"
+}
+
+
+###
