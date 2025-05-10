@@ -8,59 +8,62 @@ import {
   Put,
   Delete,
   ParseIntPipe,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { UpdatePatchDTO } from './dto/update-patch.dto';
+import { UserService } from './user.service';
 
 @Controller('users')
 export class UserController {
+  constructor(private readonly userService: UserService) {}
+
   @Post()
-  async create(@Body() { email, name, password }: CreateUserDTO) {
-    return { email, name, password };
+  async create(@Body() data: CreateUserDTO) {
+    return this.userService.create(data);
   }
 
   @Get()
-  async read() {
-    return {
-      users: [
-        { email: 'teste@domain.com', name: 'teste', password: '******' },
-        { email: 'teste@domain.com', name: 'teste2', password: '******' },
-      ],
-    };
+  async listAll() {
+    return this.userService.listAll();
   }
 
   @Get(':id')
   async readOne(@Param('id', ParseIntPipe) id: number) {
-    return { user: {}, id };
+    return this.userService.listOne(id);
   }
 
   @Put(':id')
   async update(
-    @Body() { email, name, password }: UpdateUserDTO,
+    @Body() data: UpdateUserDTO,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return {
-      method: 'put',
-      email,
-      name,
-      password,
-      params: { id },
-    };
+    await this.exists(id);
+
+    return this.userService.update(id, data);
   }
 
   @Patch(':id')
   async updatePartial(
-    @Body() { email, name, password }: UpdatePatchDTO,
+    @Body() data: UpdatePatchDTO,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return { method: 'patch', email, name, password, id };
+    await this.exists(id);
+
+    return this.userService.updatePartial(id, data);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
-    return {
-      id,
-    };
+    await this.exists(id);
+
+    return this.userService.delete(id);
+  }
+
+  async exists(id: number){
+    if (!(await this.readOne(id))) {
+      throw new NotFoundException(`O usuário ${id} não existe.`);
+    }
   }
 }
