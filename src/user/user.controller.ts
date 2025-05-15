@@ -3,18 +3,18 @@ import {
   Post,
   Body,
   Get,
-  Param,
   Patch,
   Put,
   Delete,
-  ParseIntPipe,
-  NotFoundException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { UpdatePatchDTO } from './dto/update-patch.dto';
 import { UserService } from './user.service';
-
+import { LogInterceptor } from 'src/interceptors/log.interceptors';
+import { ParamId } from 'src/decorators/param-id.decorator';
+@UseInterceptors(LogInterceptor)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -30,40 +30,22 @@ export class UserController {
   }
 
   @Get(':id')
-  async readOne(@Param('id', ParseIntPipe) id: number) {
+  async readOne(@ParamId() id: number) {
     return this.userService.listOne(id);
   }
 
   @Put(':id')
-  async update(
-    @Body() data: UpdateUserDTO,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    await this.exists(id);
-
+  async update(@Body() data: UpdateUserDTO, @ParamId() id: number) {
     return this.userService.update(id, data);
   }
 
   @Patch(':id')
-  async updatePartial(
-    @Body() data: UpdatePatchDTO,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    await this.exists(id);
-
+  async updatePartial(@Body() data: UpdatePatchDTO, @ParamId() id: number) {
     return this.userService.updatePartial(id, data);
   }
 
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    await this.exists(id);
-
+  async delete(@ParamId() id: number) {
     return this.userService.delete(id);
-  }
-
-  async exists(id: number){
-    if (!(await this.readOne(id))) {
-      throw new NotFoundException(`O usuário ${id} não existe.`);
-    }
   }
 }
