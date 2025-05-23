@@ -3,12 +3,17 @@ import { CreateUserDTO } from './dto/create-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { UpdatePatchDTO } from './dto/update-patch.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateUserDTO) {
+    const salt = await bcrypt.genSalt();
+
+    data.password = await bcrypt.hash(data.password, salt);
+
     return this.prisma.user.create({
       data,
       //   select: {   //select utilizado para selecionar o que voce quer
@@ -31,8 +36,15 @@ export class UserService {
     });
   }
 
-  async update(id: number, { birthAt, name, email, password }: UpdateUserDTO) {
+  async update(
+    id: number,
+    { birthAt, name, email, password, role }: UpdateUserDTO,
+  ) {
     await this.exists(id);
+
+    const salt = await bcrypt.genSalt();
+
+    password = await bcrypt.hash(password, salt);
 
     return this.prisma.user.update({
       data: {
@@ -40,6 +52,7 @@ export class UserService {
         name,
         email,
         password,
+        role,
       },
       where: {
         id,
@@ -50,9 +63,15 @@ export class UserService {
   async updatePartial(id: number, data: UpdatePatchDTO) {
     await this.exists(id);
 
+    const salt = await bcrypt.genSalt();
+
     const updatedData = {
       ...data,
       birthAt: data.birthAt ? new Date(data.birthAt) : undefined,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      password: data.password
+        ? await bcrypt.hash(data.password, salt)
+        : undefined,
     };
 
     return this.prisma.user.update({
