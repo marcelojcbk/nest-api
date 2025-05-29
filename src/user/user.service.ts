@@ -8,8 +8,8 @@ import { UpdateUserDTO } from './dto/update-user.dto';
 import { UpdatePatchDTO } from './dto/update-patch.dto';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
-import { UserEntity } from './entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from './entity/user.entity';
 
 @Injectable()
 export class UserService {
